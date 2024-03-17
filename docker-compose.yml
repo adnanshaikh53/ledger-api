@@ -1,0 +1,66 @@
+version: '3.3'
+
+services:
+  postgres_master:
+    image: postgres:latest
+    container_name: postgres_master
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=hivepro
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+
+
+  postgres_follower:
+    image: postgres:latest
+    container_name: postgres_follower
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=hivepro
+      - POSTGRES_MASTER_HOST=postgres_master
+      - POSTGRES_MASTER_PORT=5432
+      - POSTGRES_MASTER_USER=root
+      - POSTGRES_MASTER_PASSWORD=root
+      - POSTGRES_REPLICATION_ROLE=replica
+    volumes:
+      - follower-db-data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    ports:
+      - "5433:5432"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin4_container
+    restart: always
+    ports:
+      - "8888:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: root@hivepro.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+
+  zookeeper:
+    image: wurstmeister/zookeeper:latest
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+
+
+
+volumes:
+  db-data:
+  follower-db-data:
+  pgadmin-data:
