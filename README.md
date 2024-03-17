@@ -4,13 +4,6 @@ The Ledger microservice is designed to serve as the source of truth for balances
 
 # Architecture of our Service:
 
-# How to run: 
-1. Start all services mentioned in docker compose file:
-2.Images of Zookeeper, kafka, Postgres master and replica for CQRS are provided
-in the postgre init db add: init.sql provided in the repo
-3.Once all istnces of postgres, kafka and zookeeper are running on docker
-4. Start Ledger-api servive
-5. Kafka Topics are created in KafkaTopicCreation.java no need to provide topic creation manually
 # Features
 
 # Endpoints
@@ -38,6 +31,12 @@ PostgreSQL
 Clone the repository.
 Configure the database settings in application.properties.
 Build and run the application using Maven or your preferred IDE.
+Start all services mentioned in docker compose file:
+Images of Zookeeper, kafka, Postgres master and replica for CQRS are provided
+in the postgre init db add: init.sql provided in the repo
+Once all instances of postgres, kafka and zookeeper are running on docker
+Start Ledger-api servive
+Kafka Topics are created in KafkaTopicCreation.java no need to provide topic creation manually
 Access the API documentation provided through Swagger or Postman.
 [local](http://localhost:8080/swagger-ui/index.html#/)
 Documentation
