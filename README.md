@@ -2,16 +2,17 @@
 # Overview
 The Ledger microservice is designed to serve as the source of truth for balances of assets and liabilities of an entity. It allows clients to manage multi-asset accounts, perform asset movements, track account and movement lifecycles, and retrieve historical balance data. Built with the latest Java and Spring Boot technologies, the Ledger microservice provides both synchronous and asynchronous communication capabilities to its clients.
 
+# Architecture of our Service:
+
+# How to run: 
+1. Start all services mentioned in docker compose file:
+2.Images of Zookeeper, kafka, Postgres master and replica for CQRS are provided
+in the postgre init db add: init.sql provided in the repo
+3.Once all istnces of postgres, kafka and zookeeper are running on docker
+4. Start Ledger-api servive
+5. Kafka Topics are created in KafkaTopicCreation.java no need to provide topic creation manually
 # Features
-Multi-Asset Account Management: Supports creation and management of accounts with multiple wallets representing various assets.
-Asset Movements: Allows clients to move assets between wallets within an account.
-Transaction Consistency: Guarantees "all or nothing" execution for asset movement requests.
-Account Lifecycle Management: Facilitates account state transitions such as OPEN and CLOSED.
-Posting Lifecycle Management: Supports various posting states like PENDING, CLEARED, and FAILED.
-Balance Change Broadcasting: Broadcasts balance changes and movements to clients for real-time updates.
-Asynchronous Communication: Enables clients to make movement requests in asynchronous mode.
-Historical Data Retrieval: Provides clients with historical balance data for specific wallets at given timestamps.
-Scalable Database Design: Utilizes CQRS pattern for efficient handling of write-heavy operations.
+
 # Endpoints
 # Account Management
 POST /accounts: Create a new account.
