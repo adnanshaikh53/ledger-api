@@ -48,17 +48,17 @@ public class WalletMovementService {
                 Wallet destinationWallet = destinationWalletOptional.get();
 
                 if (sourceWallet.getAccount().getStatus().name().equals(AccountState.CLOSED.name())) {
-                    walletMovementResponses.add(handleClosedAccountScenario());
+                    walletMovementResponses.add(handleClosedAccountScenario(walletMovementRequest));
                 }
 
                 if (sourceWallet.getId().equals(destinationWallet.getId())) {
-                    walletMovementResponses.add(handleSameWalletScenario());
+                    walletMovementResponses.add(handleSameWalletScenario(walletMovementRequest));
                 }
 
                 if (!sourceWallet.getAssetType().equals(destinationWallet.getAssetType())) {
                     double exchangeRate = getExchangeRate(sourceWallet.getAssetType(), destinationWallet.getAssetType());
                     if (exchangeRate <= 0) {
-                        walletMovementResponses.add(handleNoExchangeRateAvailable());
+                        walletMovementResponses.add(handleNoExchangeRateAvailable(walletMovementRequest));
                     }
                     double convertedAmount = walletMovementRequest.getAmount() * exchangeRate;
                     if (sourceWallet.getBalance().compareTo(BigDecimal.valueOf(walletMovementRequest.getAmount())) < 0) {
@@ -74,15 +74,14 @@ public class WalletMovementService {
                 sendWalletMovementBroadcast(sourceWallet.getId(),destinationWallet.getId(),walletMovementRequest.getAmount());
                 sendWalletBalanceUpdate(sourceWallet.getId(),sourceWallet.getBalance().doubleValue());
                 sendWalletBalanceUpdate(destinationWallet.getId(),destinationWallet.getBalance().doubleValue());
-                walletMovementResponses.add(handleSuccessScenario());
+                walletMovementResponses.add(handleSuccessScenario(walletMovementRequest));
             }
-            walletMovementResponses.add(WalletMovementResponse.builder()
-                    .status("Failure")
-                    .description("Source or destination wallet not found")
-                    .build());
+            walletMovementResponses.add(handleWalletsNotFoundScenario(walletMovementRequest));
         }
         return walletMovementResponses;
     }
+
+
 
     public void sendWalletMovementBroadcast(Long sourceWalletId, Long destinationWalletId, double amount) {
         broadcaster.publishMovementEvent(WalletMovementChangeEvent.builder()
@@ -117,10 +116,12 @@ public class WalletMovementService {
             sendWalletMovementBroadcast(sourceWallet.getId(),destinationWallet.getId(),amount);
             sendWalletBalanceUpdate(sourceWallet.getId(),sourceWallet.getBalance().doubleValue());
             sendWalletBalanceUpdate(destinationWallet.getId(),destinationWallet.getBalance().doubleValue());
-            return handleSuccessScenario();
+            return handleSuccessScenario(WalletMovementRequest.builder().sourceWalletId(sourceWallet.getId()).destinationWalletId(destinationWallet.getId()).build());
         }
         return WalletMovementResponse.builder()
                 .status("Failed")
+                .sourceWalletId(sourceWallet.getId())
+                .destinationWalletId(destinationWallet.getId())
                 .description("Insufficient Funds")
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -142,36 +143,53 @@ public class WalletMovementService {
     }
 
 
-    private WalletMovementResponse handleClosedAccountScenario() {
+    private WalletMovementResponse handleClosedAccountScenario(WalletMovementRequest request) {
         return WalletMovementResponse.builder()
                 .status("Failed")
+                .sourceWalletId(request.getSourceWalletId())
+                .destinationWalletId(request.getDestinationWalletId())
                 .description("Account is currently closed for the wallet , kindly re-open the account again to use wallet")
                 .createdAt(LocalDateTime.now())
                 .build();
     }
 
 
-    private WalletMovementResponse handleSameWalletScenario() {
+    private WalletMovementResponse handleSameWalletScenario(WalletMovementRequest request) {
         return WalletMovementResponse.builder()
                 .status("Failed")
+                .sourceWalletId(request.getSourceWalletId())
+                .destinationWalletId(request.getDestinationWalletId())
                 .description("Same wallets provided for Source and Destination")
                 .createdAt(LocalDateTime.now())
                 .build();
     }
 
-    private WalletMovementResponse handleNoExchangeRateAvailable() {
+    private WalletMovementResponse handleNoExchangeRateAvailable(WalletMovementRequest request) {
         return WalletMovementResponse.builder()
                 .status("Failed")
+                .sourceWalletId(request.getSourceWalletId())
+                .destinationWalletId(request.getDestinationWalletId())
                 .description("No exchange rate available for the asset pair")
                 .createdAt(LocalDateTime.now())
                 .build();
     }
 
-    private WalletMovementResponse handleSuccessScenario() {
+    private WalletMovementResponse handleSuccessScenario(WalletMovementRequest request) {
         return WalletMovementResponse.builder()
                 .status("Success")
+                .sourceWalletId(request.getSourceWalletId())
+                .destinationWalletId(request.getDestinationWalletId())
                 .description("Moved Assets Successfully")
                 .createdAt(LocalDateTime.now())
+                .build();
+    }
+
+    private static WalletMovementResponse handleWalletsNotFoundScenario(WalletMovementRequest walletMovementRequest) {
+        return WalletMovementResponse.builder()
+                .status("Failure")
+                .sourceWalletId(walletMovementRequest.getSourceWalletId())
+                .destinationWalletId(walletMovementRequest.getDestinationWalletId())
+                .description("Source or destination wallet not found")
                 .build();
     }
 }
